@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 import it.polito.tdp.PremierLeague.model.Adiacenza;
+import it.polito.tdp.PremierLeague.model.Match;
 import it.polito.tdp.PremierLeague.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -44,10 +45,10 @@ public class FXMLController {
     private ComboBox<Integer> cmbMese; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbM1"
-    private ComboBox<?> cmbM1; // Value injected by FXMLLoader
+    private ComboBox<Match> cmbM1; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbM2"
-    private ComboBox<?> cmbM2; // Value injected by FXMLLoader
+    private ComboBox<Match> cmbM2; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtResult"
     private TextArea txtResult; // Value injected by FXMLLoader
@@ -85,7 +86,10 @@ public class FXMLController {
     		txtResult.appendText("# Archi: "+this.model.getNumArchi()+"\n");
     		
     		this.btnConnessioneMassima.setDisable(false);
+    		this.btnCollegamento.setDisable(false);
     		
+    		this.cmbM1.getItems().addAll(this.model.getVertici());
+    		this.cmbM2.getItems().addAll(this.model.getVertici());
     		
     	} catch (NumberFormatException e) {
     		txtResult.appendText("Errore: inserito un numero non valido, inserire un intero!");
@@ -97,6 +101,28 @@ public class FXMLController {
     @FXML
     void doCollegamento(ActionEvent event) {
     	
+    	txtResult.clear();
+    	if (this.cmbM1.getValue()==null) {
+    		txtResult.appendText("Inserire un valore per m1");
+    		return;
+    	}
+    	if (this.cmbM2.getValue()==null) {
+    		txtResult.appendText("Inserire un valore per m2");
+    		return;
+    	}
+    	List<Match> risultato = this.model.getPercorso(this.cmbM1.getValue(), this.cmbM2.getValue());
+    	
+    	if (risultato.isEmpty()) {
+    		txtResult.appendText("Non presente tra i due match un percorso che rispetti i parametri");
+    	} else {
+    	
+    	txtResult.appendText("Percorso migliore:\n");
+    	for (Match m : risultato) {
+    		txtResult.appendText(m.toString()+"\n");
+    	}
+    	txtResult.appendText("Peso complessivo: "+this.model.getPeso());
+    	
+    	}
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete

@@ -1,7 +1,10 @@
 package it.polito.tdp.PremierLeague.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +21,8 @@ public class Model {
 	private PremierLeagueDAO dao;
 	private Map<Integer, Match> idMap;
 	private List<Adiacenza> archi;
+	private double peso;
+	private List<Match> percorsoMig;
 	
 	public Model() {
 		this.dao = new PremierLeagueDAO();
@@ -65,6 +70,43 @@ public class Model {
 	
 	public int getNumArchi() {
 		return this.grafo.edgeSet().size();
+	}
+	
+	public Collection<Match> getVertici() {
+		List<Match> risultato = new ArrayList<>(idMap.values());
+		Collections.sort(risultato);
+		return risultato;
+	}
+	
+	public List<Match> getPercorso(Match m1, Match m2) {
+		this.peso = 0;
+		this.percorsoMig = new LinkedList<>();
+		ricorsiva(m1, m2, new LinkedList<Match>(), 0);
+		return this.percorsoMig;
+	}
+	
+	public double getPeso() {
+		return this.peso;
+	}
+
+	private void ricorsiva(Match m1, Match m2, LinkedList<Match> percorso, double peso) {
+		
+		if (m1.equals(m2)) {
+			if (peso>this.peso) {
+				this.peso = peso;
+				this.percorsoMig = new LinkedList<>(percorso);
+			}
+		} else {
+			for (DefaultWeightedEdge e : this.grafo.outgoingEdgesOf(m1)) {
+				Match m = Graphs.getOppositeVertex(this.grafo, e, m1);
+				if (!(m.getTeamHomeID()==m1.getTeamHomeID() && m.getTeamAwayID()==m1.getTeamAwayID()) && !(m.getTeamAwayID()==m1.getTeamHomeID() && m.getTeamHomeID()==m1.getTeamAwayID()) && !percorso.contains(m)) {
+					percorso.add(m);
+					ricorsiva(m, m2, percorso, (int) (peso + this.grafo.getEdgeWeight(e)));
+					percorso.remove(m);
+				}
+			}
+		}
+		
 	}
 	
 }
