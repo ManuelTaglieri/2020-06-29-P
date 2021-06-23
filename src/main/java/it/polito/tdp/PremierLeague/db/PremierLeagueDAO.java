@@ -6,7 +6,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
 import it.polito.tdp.PremierLeague.model.Action;
+import it.polito.tdp.PremierLeague.model.Adiacenza;
 import it.polito.tdp.PremierLeague.model.Match;
 import it.polito.tdp.PremierLeague.model.Player;
 
@@ -87,6 +90,66 @@ public class PremierLeagueDAO {
 			e.printStackTrace();
 			return null;
 		}
+	}
+	
+	public void getMatchesByMonth(int month, Map<Integer, Match> idMap) {
+		String sql = "SELECT m.MatchID, m.TeamHomeID, m.TeamAwayID, m.teamHomeFormation, m.teamAwayFormation, m.resultOfTeamHome, m.date, t1.Name, t2.Name "
+				+ "FROM Matches m, Teams t1, Teams t2 "
+				+ "WHERE m.TeamHomeID = t1.TeamID AND m.TeamAwayID = t2.TeamID AND MONTH(m.date)=?";
+
+		Connection conn = DBConnect.getConnection();
+
+		try {
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, month);
+			ResultSet res = st.executeQuery();
+			while (res.next()) {
+
+				if (idMap.get(res.getInt("m.MatchID")) == null) {
+				Match match = new Match(res.getInt("m.MatchID"), res.getInt("m.TeamHomeID"), res.getInt("m.TeamAwayID"), res.getInt("m.teamHomeFormation"), 
+							res.getInt("m.teamAwayFormation"),res.getInt("m.resultOfTeamHome"), res.getTimestamp("m.date").toLocalDateTime(), res.getString("t1.Name"),res.getString("t2.Name"));
+				idMap.put(res.getInt("m.MatchID"), match);
+				}
+
+			}
+			conn.close();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public List<Adiacenza> getAdiacenze(Map<Integer, Match> idMap, int num) {
+		String sql = "SELECT a1.MatchID as m1, a2.MatchID as m2, COUNT(*) as peso "
+				+ "FROM actions a1, actions a2 "
+				+ "WHERE a1.PlayerID = a2.PlayerID AND a1.MatchID > a2.MatchID AND a1.TimePlayed >= ? AND a2.TimePlayed >= ? "
+				+ "GROUP BY a1.MatchID, a2.MatchID";
+		
+		List<Adiacenza> result = new ArrayList<>();
+		Connection conn = DBConnect.getConnection();
+
+		try {
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, num);
+			st.setInt(2, num);
+			ResultSet res = st.executeQuery();
+			while (res.next()) {
+				
+				if (idMap.get(res.getInt("m1"))!=null && idMap.get(res.getInt("m2"))!=null) {
+				Adiacenza adiacenza = new Adiacenza(idMap.get(res.getInt("m1")), idMap.get(res.getInt("m2")), res.getInt("peso"));
+				result.add(adiacenza);
+				}
+
+			}
+			conn.close();
+			return result;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+		
 	}
 	
 }
