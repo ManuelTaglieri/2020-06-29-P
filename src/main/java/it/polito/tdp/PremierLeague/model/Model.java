@@ -81,7 +81,9 @@ public class Model {
 	public List<Match> getPercorso(Match m1, Match m2) {
 		this.peso = 0;
 		this.percorsoMig = new LinkedList<>();
-		ricorsiva(m1, m2, new LinkedList<Match>(), 0);
+		LinkedList<Match> percorso = new LinkedList<Match>();
+		percorso.add(m1);
+		ricorsiva(m1, m2, percorso, 0);
 		return this.percorsoMig;
 	}
 	
